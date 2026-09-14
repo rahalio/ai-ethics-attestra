@@ -1,0 +1,2136 @@
+openapi: 3.0.3
+info:
+  title: Attestra
+  version: 0.1.0
+  description: >-
+    AI assurance control plane for European enterprises. Attestra registers every AI
+    system and the decision types it feeds, records the lawful basis for solely
+    automated decisions, keeps individual-rights safeguards demonstrably live, schedules
+    fairness and explainability obligations, enforces independent second-line challenge,
+    and issues an expiring deployment clearance that the release pipeline treats as a
+    gate. Portfolio state is priced as value at stake across intelligent automation,
+    augmentation and innovation diffusion.
+  x-product-slug: ai-ethics-attestra
+  x-source: ai-in-ethics/Accenture-Realising-Economic-Societal-Potential-Responsible-AI-2/
+servers:
+  - url: https://api.example.com
+tags:
+  - name: Inventory
+    description: AI systems, the decision types they feed, intended use and risk tiering
+  - name: Lawful Basis
+    description: Registration and validity of the basis for solely automated decisions
+  - name: Testing
+    description: Fairness assessments, protected-attribute scope and algorithm audits
+  - name: Explainability
+    description: Per-use-case determination of explanation obligations and artefacts
+  - name: Clearance
+    description: Clearance requests, independent challenge, clearances and risk acceptance
+  - name: Oversight
+    description: Named human overseers, competence and capacity
+  - name: Contestation
+    description: Human intervention, point-of-view and contestation cases
+  - name: Third-Party Models
+    description: Vendor model due diligence and re-assessment
+  - name: Provenance
+    description: Dataset source, rights and text-and-data-mining position
+  - name: Conformity
+    description: Mapping of internal controls to external codes, standards and schemes
+  - name: Incidents
+    description: AI incident capture and regulatory notification
+  - name: Value at Stake
+    description: Priced portfolio reporting by growth channel
+paths:
+  /v1/ai-systems:
+    get:
+      operationId: listAiSystems
+      tags: [Inventory]
+      summary: List registered AI systems
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: riskTier
+          in: query
+          schema:
+            $ref: "#/components/schemas/RiskTier"
+        - name: clearanceState
+          in: query
+          schema:
+            $ref: "#/components/schemas/ClearanceState"
+        - name: businessUnit
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: AI systems page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeAiSystem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: registerAiSystem
+      tags: [Inventory]
+      summary: Register an AI system in the inventory
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiSystemCreate"
+      responses:
+        "201":
+          description: AI system registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeAiSystem"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+  /v1/ai-systems/{aiSystemId}:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    get:
+      operationId: getAiSystem
+      tags: [Inventory]
+      summary: Get an AI system with its current clearance state
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: AI system
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeAiSystem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/ai-systems/{aiSystemId}/intended-use:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    put:
+      operationId: declareIntendedUse
+      tags: [Inventory]
+      summary: Declare or revise the intended-use statement
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntendedUseStatement"
+      responses:
+        "200":
+          description: Intended use recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeIntendedUseStatement"
+        "409":
+          description: Revision materially changes scope and degrades the live clearance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /v1/ai-systems/{aiSystemId}/decision-types:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    get:
+      operationId: listDecisionTypes
+      tags: [Inventory]
+      summary: List decision types this system contributes to
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Decision types page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeDecisionType"
+    post:
+      operationId: registerDecisionType
+      tags: [Inventory]
+      summary: Register a decision type served by this system
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecisionTypeCreate"
+      responses:
+        "201":
+          description: Decision type registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDecisionType"
+  /v1/ai-systems/{aiSystemId}/risk-tiering:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    post:
+      operationId: assessRiskTier
+      tags: [Inventory]
+      summary: Assess and assign the risk tier
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskTierAssessmentCreate"
+      responses:
+        "201":
+          description: Risk tier assessed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeRiskTierAssessment"
+  /v1/decision-types/{decisionTypeId}/lawful-basis:
+    parameters:
+      - $ref: "#/components/parameters/DecisionTypeId"
+    get:
+      operationId: getLawfulBasis
+      tags: [Lawful Basis]
+      summary: Get the registered basis for a solely automated decision
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Lawful basis registration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeLawfulBasisRegistration"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: registerAutomatedDecisionBasis
+      tags: [Lawful Basis]
+      summary: Register the lawful basis for automating this decision
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LawfulBasisRegistrationCreate"
+      responses:
+        "201":
+          description: Lawful basis registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeLawfulBasisRegistration"
+        "422":
+          description: No permitted basis applies and the decision may not be fully automated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /v1/decision-types/{decisionTypeId}/safeguards:
+    parameters:
+      - $ref: "#/components/parameters/DecisionTypeId"
+    put:
+      operationId: configureSafeguards
+      tags: [Lawful Basis]
+      summary: Configure intervention, point-of-view and contestation channels
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SafeguardConfiguration"
+      responses:
+        "200":
+          description: Safeguards configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeSafeguardConfiguration"
+  /v1/ai-systems/{aiSystemId}/fairness-assessments:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    get:
+      operationId: listFairnessAssessments
+      tags: [Testing]
+      summary: List fairness assessments for a system
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Fairness assessments page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeFairnessAssessment"
+    post:
+      operationId: recordFairnessAssessment
+      tags: [Testing]
+      summary: Record a completed fairness assessment and its evidenced scope
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FairnessAssessmentCreate"
+      responses:
+        "201":
+          description: Fairness assessment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeFairnessAssessment"
+        "422":
+          description: Protected attribute claimed without a lawful basis for holding it
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /v1/ai-systems/{aiSystemId}/algorithm-audits:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    post:
+      operationId: commissionAlgorithmAudit
+      tags: [Testing]
+      summary: Commission an audit that the system performs as intended
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlgorithmAuditCreate"
+      responses:
+        "201":
+          description: Algorithm audit commissioned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeAlgorithmAudit"
+  /v1/decision-types/{decisionTypeId}/explainability-determination:
+    parameters:
+      - $ref: "#/components/parameters/DecisionTypeId"
+    put:
+      operationId: determineExplainabilityObligation
+      tags: [Explainability]
+      summary: Determine whether explanation is required, desirable or unnecessary
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExplainabilityDetermination"
+      responses:
+        "200":
+          description: Explainability determination recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeExplainabilityDetermination"
+  /v1/clearance-requests:
+    get:
+      operationId: listClearanceRequests
+      tags: [Clearance]
+      summary: List clearance requests ordered by risk and expiry
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, submitted, in_challenge, blocked, cleared, withdrawn]
+      responses:
+        "200":
+          description: Clearance requests page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeClearanceRequest"
+    post:
+      operationId: requestDeploymentClearance
+      tags: [Clearance]
+      summary: Request clearance to deploy or continue operating a system
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClearanceRequestCreate"
+      responses:
+        "201":
+          description: Clearance request submitted with outstanding evidence listed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeClearanceRequest"
+  /v1/clearance-requests/{clearanceRequestId}/challenge-findings:
+    parameters:
+      - $ref: "#/components/parameters/ClearanceRequestId"
+    post:
+      operationId: raiseChallengeFinding
+      tags: [Clearance]
+      summary: Raise a second-line challenge finding
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChallengeFindingCreate"
+      responses:
+        "201":
+          description: Challenge finding raised
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeChallengeFinding"
+        "403":
+          description: Reviewer sits inside the owning unit's reporting line
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /v1/clearance-requests/{clearanceRequestId}/decision:
+    parameters:
+      - $ref: "#/components/parameters/ClearanceRequestId"
+    post:
+      operationId: decideClearanceRequest
+      tags: [Clearance]
+      summary: Issue, condition or refuse a deployment clearance
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClearanceDecision"
+      responses:
+        "201":
+          description: Clearance decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDeploymentClearance"
+        "409":
+          description: Blocking findings remain unresolved and unaccepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /v1/ai-systems/{aiSystemId}/clearance:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    get:
+      operationId: getDeploymentClearance
+      tags: [Clearance]
+      summary: Get the current clearance for gating a release
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Current clearance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDeploymentClearance"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/risk-acceptances:
+    get:
+      operationId: listRiskAcceptances
+      tags: [Clearance]
+      summary: List live risk acceptances with named owners and expiry
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Risk acceptances page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeRiskAcceptance"
+    post:
+      operationId: signRiskAcceptance
+      tags: [Clearance]
+      summary: Accept a known control gap for a bounded period
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskAcceptanceCreate"
+      responses:
+        "201":
+          description: Risk acceptance signed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeRiskAcceptance"
+  /v1/oversight-assignments:
+    get:
+      operationId: listOversightAssignments
+      tags: [Oversight]
+      summary: List oversight assignments and concentration warnings
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: overConcentratedOnly
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Oversight assignments page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeOversightAssignment"
+    post:
+      operationId: assignHumanOversight
+      tags: [Oversight]
+      summary: Nominate a named human overseer for a decision type
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OversightAssignmentCreate"
+      responses:
+        "201":
+          description: Oversight nomination created pending acceptance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeOversightAssignment"
+  /v1/oversight-assignments/{assignmentId}/response:
+    parameters:
+      - $ref: "#/components/parameters/AssignmentId"
+    post:
+      operationId: respondToOversightNomination
+      tags: [Oversight]
+      summary: Accept or refuse an oversight nomination
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [response]
+              properties:
+                response:
+                  type: string
+                  enum: [accepted, refused]
+                refusalReason:
+                  type: string
+                  enum: [insufficient_competence, insufficient_capacity, conflict_of_interest]
+                competency:
+                  $ref: "#/components/schemas/OverseerCompetency"
+      responses:
+        "200":
+          description: Nomination response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeOversightAssignment"
+  /v1/contestations:
+    get:
+      operationId: listContestations
+      tags: [Contestation]
+      summary: List contestation and intervention cases
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: breachedCommitment
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Contestation cases page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeContestationCase"
+    post:
+      operationId: openContestation
+      tags: [Contestation]
+      summary: Open a human intervention, point-of-view or contestation case
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContestationCaseCreate"
+      responses:
+        "201":
+          description: Case opened with response commitment applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeContestationCase"
+  /v1/contestations/{contestationId}/decision:
+    parameters:
+      - $ref: "#/components/parameters/ContestationId"
+    post:
+      operationId: decideContestation
+      tags: [Contestation]
+      summary: Record the named overseer's decision on a case
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome, rationale, decidedBy]
+              properties:
+                outcome:
+                  type: string
+                  enum: [upheld, overturned, partially_amended, referred_out]
+                rationale:
+                  type: string
+                decidedBy:
+                  type: string
+                  description: Named overseer identifier
+      responses:
+        "200":
+          description: Case decided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeContestationCase"
+  /v1/third-party-models:
+    get:
+      operationId: listThirdPartyModels
+      tags: [Third-Party Models]
+      summary: List vendor-supplied models and their assurance state
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Third-party models page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeThirdPartyModel"
+  /v1/third-party-models/{vendorModelId}/due-diligence:
+    parameters:
+      - $ref: "#/components/parameters/VendorModelId"
+    post:
+      operationId: recordVendorDueDiligence
+      tags: [Third-Party Models]
+      summary: Record what was independently verified versus accepted on assurance
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorDueDiligenceCreate"
+      responses:
+        "201":
+          description: Due diligence recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeVendorDueDiligence"
+  /v1/dataset-provenance:
+    post:
+      operationId: registerDatasetProvenance
+      tags: [Provenance]
+      summary: Register dataset source, licence and mining rights position
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DatasetProvenanceCreate"
+      responses:
+        "201":
+          description: Provenance registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeDatasetProvenance"
+  /v1/ai-systems/{aiSystemId}/liability-apportionment:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    put:
+      operationId: recordLiabilityApportionment
+      tags: [Conformity]
+      summary: Record responsibility split per operating mode
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LiabilityApportionment"
+      responses:
+        "200":
+          description: Apportionment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeLiabilityApportionment"
+  /v1/conformity-mappings:
+    get:
+      operationId: listConformityMappings
+      tags: [Conformity]
+      summary: List control-to-scheme mappings and affected external claims
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: scheme
+          in: query
+          schema:
+            type: string
+            example: iso_iec_jtc1_sc42
+      responses:
+        "200":
+          description: Conformity mappings page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListEnvelopeConformityMapping"
+  /v1/ai-systems/{aiSystemId}/dossier:
+    parameters:
+      - $ref: "#/components/parameters/AiSystemId"
+    get:
+      operationId: getConformityDossier
+      tags: [Conformity]
+      summary: Issue a scoped dossier extract for an assessor or customer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: audience
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [internal_audit, certification_body, supervisory_authority, enterprise_customer, insurer]
+        - name: asOf
+          in: query
+          description: Reconstruct the dossier as it stood on this date
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Dossier extract with privileged material excluded by audience
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeConformityDossier"
+  /v1/incidents:
+    post:
+      operationId: reportAiIncident
+      tags: [Incidents]
+      summary: Report an AI incident and track notification obligations
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiIncidentCreate"
+      responses:
+        "201":
+          description: Incident recorded with notification clocks started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeAiIncident"
+  /v1/value-at-stake:
+    get:
+      operationId: getValueAtStakeReport
+      tags: [Value at Stake]
+      summary: Report priced portfolio state by growth channel
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            example: 2026-Q3
+        - name: businessUnit
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Value at stake by clearance state and growth channel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataEnvelopeValueAtStakeReport"
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+    AiSystemId:
+      name: aiSystemId
+      in: path
+      required: true
+      schema:
+        type: string
+    DecisionTypeId:
+      name: decisionTypeId
+      in: path
+      required: true
+      schema:
+        type: string
+    ClearanceRequestId:
+      name: clearanceRequestId
+      in: path
+      required: true
+      schema:
+        type: string
+    AssignmentId:
+      name: assignmentId
+      in: path
+      required: true
+      schema:
+        type: string
+    ContestationId:
+      name: contestationId
+      in: path
+      required: true
+      schema:
+        type: string
+    VendorModelId:
+      name: vendorModelId
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    ResponseMeta:
+      type: object
+      required: [requestId, timestamp]
+      properties:
+        requestId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+          example: EUR
+    RiskTier:
+      type: string
+      enum: [minimal, limited, high, prohibited]
+    ClearanceState:
+      type: string
+      enum: [none, pending, cleared, cleared_with_conditions, degraded, expired, refused]
+    GrowthChannel:
+      type: string
+      description: Growth channel attribution used for value-at-stake reporting
+      enum: [intelligent_automation, augmentation, innovation_diffusion]
+    AiSystem:
+      type: object
+      required: [id, name, owner, businessUnit, sourcing, clearanceState]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        owner:
+          type: string
+          description: Named accountable model owner
+        businessUnit:
+          type: string
+        sourcing:
+          type: string
+          enum: [built_in_house, vendor_supplied, jointly_developed, open_weights]
+        riskTier:
+          $ref: "#/components/schemas/RiskTier"
+        clearanceState:
+          $ref: "#/components/schemas/ClearanceState"
+        clearanceExpiresAt:
+          type: string
+          format: date-time
+        sectoralSupervisors:
+          type: array
+          items:
+            type: string
+            example: national_financial_supervisor
+        registryReference:
+          type: string
+          description: Identifier in the enterprise model registry
+        physicalSafetyRelevant:
+          type: boolean
+    AiSystemCreate:
+      type: object
+      required: [name, owner, businessUnit, sourcing]
+      properties:
+        name:
+          type: string
+        owner:
+          type: string
+        businessUnit:
+          type: string
+        sourcing:
+          type: string
+          enum: [built_in_house, vendor_supplied, jointly_developed, open_weights]
+        registryReference:
+          type: string
+        physicalSafetyRelevant:
+          type: boolean
+    IntendedUseStatement:
+      type: object
+      required: [purpose, populationsAffected, degreeOfAutomation]
+      properties:
+        purpose:
+          type: string
+        populationsAffected:
+          type: array
+          items:
+            type: string
+        outOfScopeUses:
+          type: array
+          items:
+            type: string
+        degreeOfAutomation:
+          type: string
+          enum: [decision_support, human_in_the_loop, human_on_the_loop, solely_automated]
+        jurisdictions:
+          type: array
+          items:
+            type: string
+            example: DE
+        declaredBy:
+          type: string
+        declaredAt:
+          type: string
+          format: date-time
+    DecisionType:
+      type: object
+      required: [id, aiSystemId, name, solelyAutomated]
+      properties:
+        id:
+          type: string
+        aiSystemId:
+          type: string
+        name:
+          type: string
+          example: Unsecured credit limit assignment
+        solelyAutomated:
+          type: boolean
+        legalEffect:
+          type: string
+          enum: [none, significant_effect, legal_effect]
+        specialCategoryDataInvolved:
+          type: boolean
+        annualDecisionVolume:
+          type: integer
+        lawfulBasisValid:
+          type: boolean
+    DecisionTypeCreate:
+      type: object
+      required: [name, solelyAutomated, legalEffect]
+      properties:
+        name:
+          type: string
+        solelyAutomated:
+          type: boolean
+        legalEffect:
+          type: string
+          enum: [none, significant_effect, legal_effect]
+        specialCategoryDataInvolved:
+          type: boolean
+        annualDecisionVolume:
+          type: integer
+    RiskTierAssessmentCreate:
+      type: object
+      required: [proposedTier, rationale]
+      properties:
+        proposedTier:
+          $ref: "#/components/schemas/RiskTier"
+        rationale:
+          type: string
+        factors:
+          type: array
+          items:
+            type: string
+            example: affects_access_to_credit
+    RiskTierAssessment:
+      type: object
+      required: [id, aiSystemId, assignedTier, assessedBy, assessedAt]
+      properties:
+        id:
+          type: string
+        aiSystemId:
+          type: string
+        assignedTier:
+          $ref: "#/components/schemas/RiskTier"
+        rationale:
+          type: string
+        factors:
+          type: array
+          items:
+            type: string
+        assessedBy:
+          type: string
+        assessedAt:
+          type: string
+          format: date-time
+    LawfulBasisRegistrationCreate:
+      type: object
+      required: [basis, analysis]
+      properties:
+        basis:
+          type: string
+          description: Permitted basis for a solely automated decision
+          enum: [contract_necessity, authorised_by_law, explicit_consent]
+        analysis:
+          type: string
+        statutoryReference:
+          type: string
+        consentEvidenceSource:
+          type: string
+        registeredBy:
+          type: string
+    LawfulBasisRegistration:
+      type: object
+      required: [id, decisionTypeId, basis, status]
+      properties:
+        id:
+          type: string
+        decisionTypeId:
+          type: string
+        basis:
+          type: string
+          enum: [contract_necessity, authorised_by_law, explicit_consent]
+        status:
+          type: string
+          enum: [valid, invalidated, under_review]
+        invalidationReason:
+          type: string
+          enum: [scope_change, population_change, automation_change, consent_withdrawn, law_changed]
+        analysis:
+          type: string
+        registeredBy:
+          type: string
+        registeredAt:
+          type: string
+          format: date-time
+    SafeguardConfiguration:
+      type: object
+      required: [humanInterventionChannel, pointOfViewChannel, contestationChannel, responseCommitmentDays]
+      properties:
+        humanInterventionChannel:
+          type: string
+          example: contact_centre_queue_ADM_INT
+        pointOfViewChannel:
+          type: string
+        contestationChannel:
+          type: string
+        responseCommitmentDays:
+          type: integer
+          minimum: 1
+        publishedToDataSubjects:
+          type: boolean
+        live:
+          type: boolean
+    ProtectedAttributeScope:
+      type: object
+      required: [attribute, availability]
+      properties:
+        attribute:
+          type: string
+          example: racial_or_ethnic_origin
+        availability:
+          type: string
+          enum: [observed, inferred, proxy_only, unavailable]
+        lawfulBasisForHolding:
+          type: string
+        enclaveReference:
+          type: string
+          description: Purpose-limited enclave holding the attribute
+        retentionDays:
+          type: integer
+    FairnessAssessmentCreate:
+      type: object
+      required: [decisionTypeId, methodology, attributeScopes]
+      properties:
+        decisionTypeId:
+          type: string
+        methodology:
+          type: string
+          example: outcome_rate_parity_and_error_rate_balance
+        attributeScopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtectedAttributeScope"
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              attribute:
+                type: string
+              metric:
+                type: string
+              value:
+                type: number
+                format: float
+              tolerance:
+                type: number
+                format: float
+              withinTolerance:
+                type: boolean
+        unevidencedClaims:
+          type: array
+          items:
+            type: string
+    FairnessAssessment:
+      type: object
+      required: [id, aiSystemId, decisionTypeId, status, assessedAt]
+      properties:
+        id:
+          type: string
+        aiSystemId:
+          type: string
+        decisionTypeId:
+          type: string
+        status:
+          type: string
+          enum: [passed, passed_with_caveats, failed, inconclusive]
+        methodology:
+          type: string
+        attributeScopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProtectedAttributeScope"
+        unevidencedClaims:
+          type: array
+          items:
+            type: string
+        nextAssessmentDue:
+          type: string
+          format: date
+        assessedAt:
+          type: string
+          format: date-time
+    AlgorithmAuditCreate:
+      type: object
+      required: [scope, auditor]
+      properties:
+        scope:
+          type: string
+          enum: [performs_as_intended, bias_in_training_data, drift_since_clearance, adversarial_robustness]
+        auditor:
+          type: string
+        independent:
+          type: boolean
+        dueAt:
+          type: string
+          format: date
+    AlgorithmAudit:
+      type: object
+      required: [id, aiSystemId, scope, status]
+      properties:
+        id:
+          type: string
+        aiSystemId:
+          type: string
+        scope:
+          type: string
+        auditor:
+          type: string
+        independent:
+          type: boolean
+        status:
+          type: string
+          enum: [commissioned, in_progress, completed, overdue]
+        findingsSummary:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+    ExplainabilityDetermination:
+      type: object
+      required: [obligation, recipient, deliveredForm]
+      properties:
+        obligation:
+          type: string
+          enum: [legally_required, commercially_desirable, not_required]
+        recipient:
+          type: string
+          enum: [data_subject, front_line_agent, supervisor, internal_reviewer, court]
+        deliveredForm:
+          type: string
+          example: reason_codes_in_decision_letter
+        comprehensionEvidence:
+          type: string
+        determinedBy:
+          type: string
+        determinedAt:
+          type: string
+          format: date-time
+    ClearanceRequestCreate:
+      type: object
+      required: [aiSystemId, reason]
+      properties:
+        aiSystemId:
+          type: string
+        reason:
+          type: string
+          enum: [initial_deployment, periodic_renewal, material_change, post_incident, vendor_model_update]
+        targetLiveDate:
+          type: string
+          format: date
+        submittedBy:
+          type: string
+    ClearanceRequest:
+      type: object
+      required: [id, aiSystemId, status, submittedAt]
+      properties:
+        id:
+          type: string
+        aiSystemId:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [draft, submitted, in_challenge, blocked, cleared, withdrawn]
+        outstandingEvidence:
+          type: array
+          items:
+            type: object
+            properties:
+              requirement:
+                type: string
+              owedBy:
+                type: string
+              dueAt:
+                type: string
+                format: date
+        submittedBy:
+          type: string
+        submittedAt:
+          type: string
+          format: date-time
+    ChallengeFindingCreate:
+      type: object
+      required: [severity, finding, raisedBy]
+      properties:
+        severity:
+          type: string
+          enum: [blocking, conditional, advisory]
+        finding:
+          type: string
+        requirementReference:
+          type: string
+        raisedBy:
+          type: string
+    ChallengeFinding:
+      type: object
+      required: [id, clearanceRequestId, severity, status]
+      properties:
+        id:
+          type: string
+        clearanceRequestId:
+          type: string
+        severity:
+          type: string
+          enum: [blocking, conditional, advisory]
+        finding:
+          type: string
+        status:
+          type: string
+          enum: [open, resolved, accepted_as_risk]
+        raisedBy:
+          type: string
+        reviewerIndependent:
+          type: boolean
+        raisedAt:
+          type: string
+          format: date-time
+    ClearanceDecision:
+      type: object
+      required: [outcome, decidedBy]
+      properties:
+        outcome:
+          type: string
+          enum: [cleared, cleared_with_conditions, refused]
+        conditions:
+          type: array
+          items:
+            type: string
+        validUntil:
+          type: string
+          format: date
+        decidedBy:
+          type: string
+        rationale:
+          type: string
+    DeploymentClearance:
+      type: object
+      required: [id, aiSystemId, state, decidedBy, decidedAt]
+      properties:
+        id:
+          type: string
+        aiSystemId:
+          type: string
+        state:
+          $ref: "#/components/schemas/ClearanceState"
+        conditions:
+          type: array
+          items:
+            type: string
+        validUntil:
+          type: string
+          format: date
+        degradationReason:
+          type: string
+          enum: [lawful_basis_invalidated, safeguard_breach, fairness_failure, overseer_vacant, dataset_rights_change, vendor_model_change, incident]
+        supersedesClearanceId:
+          type: string
+        decidedBy:
+          type: string
+        decidedAt:
+          type: string
+          format: date-time
+    RiskAcceptanceCreate:
+      type: object
+      required: [aiSystemId, gap, acceptedBy, expiresAt]
+      properties:
+        aiSystemId:
+          type: string
+        challengeFindingId:
+          type: string
+        gap:
+          type: string
+        compensatingControls:
+          type: array
+          items:
+            type: string
+        acceptedBy:
+          type: string
+          description: Named executive accepting the risk
+        expiresAt:
+          type: string
+          format: date
+    RiskAcceptance:
+      type: object
+      required: [id, aiSystemId, gap, acceptedBy, expiresAt, status]
+      properties:
+        id:
+          type: string
+        aiSystemId:
+          type: string
+        gap:
+          type: string
+        acceptedBy:
+          type: string
+        expiresAt:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [live, expired, withdrawn, remediated]
+        ageDays:
+          type: integer
+    OverseerCompetency:
+      type: object
+      properties:
+        trainingCompleted:
+          type: array
+          items:
+            type: string
+        domainExperienceYears:
+          type: number
+          format: float
+        authorityToOverturn:
+          type: boolean
+        evidencedBy:
+          type: string
+    OversightAssignmentCreate:
+      type: object
+      required: [decisionTypeId, overseerId]
+      properties:
+        decisionTypeId:
+          type: string
+        overseerId:
+          type: string
+        expectedCaseLoadPerWeek:
+          type: integer
+        nominatedBy:
+          type: string
+    OversightAssignment:
+      type: object
+      required: [id, decisionTypeId, overseerId, status]
+      properties:
+        id:
+          type: string
+        decisionTypeId:
+          type: string
+        overseerId:
+          type: string
+        status:
+          type: string
+          enum: [nominated, accepted, refused, vacated]
+        refusalReason:
+          type: string
+        competency:
+          $ref: "#/components/schemas/OverseerCompetency"
+        assignmentsHeldByOverseer:
+          type: integer
+        concentrationWarning:
+          type: boolean
+    ContestationCaseCreate:
+      type: object
+      required: [decisionTypeId, caseType]
+      properties:
+        decisionTypeId:
+          type: string
+        caseType:
+          type: string
+          enum: [human_intervention, point_of_view, contestation]
+        decisionReference:
+          type: string
+        subjectStatement:
+          type: string
+        receivedVia:
+          type: string
+    ContestationCase:
+      type: object
+      required: [id, decisionTypeId, caseType, status, openedAt]
+      properties:
+        id:
+          type: string
+        decisionTypeId:
+          type: string
+        caseType:
+          type: string
+          enum: [human_intervention, point_of_view, contestation]
+        status:
+          type: string
+          enum: [open, awaiting_subject, with_overseer, decided, breached_commitment]
+        commitmentDueAt:
+          type: string
+          format: date-time
+        assignedOverseerId:
+          type: string
+        outcome:
+          type: string
+          enum: [upheld, overturned, partially_amended, referred_out]
+        openedAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: string
+          format: date-time
+    ThirdPartyModel:
+      type: object
+      required: [id, vendor, modelName, assuranceState]
+      properties:
+        id:
+          type: string
+        vendor:
+          type: string
+        modelName:
+          type: string
+        modelVersion:
+          type: string
+        assuranceState:
+          type: string
+          enum: [not_assessed, assessed, re_assessment_due, failed]
+        contractualRemedy:
+          type: string
+        onwardSharingRestricted:
+          type: boolean
+    VendorDueDiligenceCreate:
+      type: object
+      required: [independentlyVerified, acceptedOnAssurance, assessedBy]
+      properties:
+        independentlyVerified:
+          type: array
+          items:
+            type: string
+            example: fairness_results_reproduced_on_our_population
+        acceptedOnAssurance:
+          type: array
+          items:
+            type: string
+            example: training_data_composition
+        gapsCarried:
+          type: array
+          items:
+            type: string
+        contractualRemedy:
+          type: string
+        assessedBy:
+          type: string
+    VendorDueDiligence:
+      type: object
+      required: [id, vendorModelId, assessedBy, assessedAt]
+      properties:
+        id:
+          type: string
+        vendorModelId:
+          type: string
+        independentlyVerified:
+          type: array
+          items:
+            type: string
+        acceptedOnAssurance:
+          type: array
+          items:
+            type: string
+        gapsCarried:
+          type: array
+          items:
+            type: string
+        contractualRemedy:
+          type: string
+        reAssessmentDueAt:
+          type: string
+          format: date
+        assessedBy:
+          type: string
+        assessedAt:
+          type: string
+          format: date-time
+    DatasetProvenanceCreate:
+      type: object
+      required: [datasetReference, source, commercialUsePermitted]
+      properties:
+        datasetReference:
+          type: string
+        source:
+          type: string
+          enum: [first_party, licensed_vendor, public_sector_information, data_trust, web_mined, synthetic]
+        licence:
+          type: string
+        textAndDataMiningBasis:
+          type: string
+          enum: [licensed, statutory_exception, fair_use_equivalent, none]
+        commercialUsePermitted:
+          type: boolean
+        sharingTerms:
+          type: string
+        derivedIpAllocation:
+          type: string
+    DatasetProvenance:
+      type: object
+      required: [id, datasetReference, source, rightsStatus]
+      properties:
+        id:
+          type: string
+        datasetReference:
+          type: string
+        source:
+          type: string
+        licence:
+          type: string
+        textAndDataMiningBasis:
+          type: string
+        commercialUsePermitted:
+          type: boolean
+        rightsStatus:
+          type: string
+          enum: [clear, restricted, disputed, expired]
+        dependentSystemIds:
+          type: array
+          items:
+            type: string
+    LiabilityApportionment:
+      type: object
+      required: [operatingModes]
+      properties:
+        operatingModes:
+          type: array
+          items:
+            type: object
+            required: [mode, responsibleParty]
+            properties:
+              mode:
+                type: string
+                example: autonomy_engaged
+              responsibleParty:
+                type: string
+                enum: [enterprise, supplier, human_operator, shared]
+              namedAccountablePerson:
+                type: string
+              insurancePosition:
+                type: string
+        recordedBy:
+          type: string
+        recordedAt:
+          type: string
+          format: date-time
+    ConformityMapping:
+      type: object
+      required: [id, scheme, requirement, controlReference, status]
+      properties:
+        id:
+          type: string
+        scheme:
+          type: string
+          example: iso_iec_jtc1_sc42
+        requirement:
+          type: string
+        controlReference:
+          type: string
+        status:
+          type: string
+          enum: [met, partially_met, not_met, not_applicable]
+        affectedExternalClaims:
+          type: array
+          items:
+            type: string
+        lastEvidencedAt:
+          type: string
+          format: date-time
+    ConformityDossier:
+      type: object
+      required: [aiSystemId, audience, generatedAt, sections]
+      properties:
+        aiSystemId:
+          type: string
+        audience:
+          type: string
+        asOf:
+          type: string
+          format: date
+        privilegedMaterialExcluded:
+          type: boolean
+        sections:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: intended_use_and_risk_tier
+              included:
+                type: boolean
+              redactionReason:
+                type: string
+        generatedAt:
+          type: string
+          format: date-time
+        issuedTo:
+          type: string
+    AiIncidentCreate:
+      type: object
+      required: [aiSystemId, category, description]
+      properties:
+        aiSystemId:
+          type: string
+        category:
+          type: string
+          enum: [discriminatory_outcome, unlawful_automated_decision, safety_event, data_breach, explanation_failure, safeguard_unavailable]
+        description:
+          type: string
+        affectedSubjectCount:
+          type: integer
+        detectedAt:
+          type: string
+          format: date-time
+    AiIncident:
+      type: object
+      required: [id, aiSystemId, category, status]
+      properties:
+        id:
+          type: string
+        aiSystemId:
+          type: string
+        category:
+          type: string
+        status:
+          type: string
+          enum: [open, investigating, notified, closed]
+        notifications:
+          type: array
+          items:
+            type: object
+            properties:
+              recipient:
+                type: string
+                example: national_data_protection_authority
+              dueAt:
+                type: string
+                format: date-time
+              sentAt:
+                type: string
+                format: date-time
+        precedingControlFailureId:
+          type: string
+          description: Set where a control had already been reported as failing
+    ValueAtStakeEstimate:
+      type: object
+      required: [aiSystemId, clearanceState, growthChannel, annualisedContribution]
+      properties:
+        aiSystemId:
+          type: string
+        clearanceState:
+          $ref: "#/components/schemas/ClearanceState"
+        growthChannel:
+          $ref: "#/components/schemas/GrowthChannel"
+        annualisedContribution:
+          $ref: "#/components/schemas/Money"
+        pendingDays:
+          type: integer
+        dailyCostOfDelay:
+          $ref: "#/components/schemas/Money"
+    ValueAtStakeReport:
+      type: object
+      required: [period, estimates]
+      properties:
+        period:
+          type: string
+        estimates:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValueAtStakeEstimate"
+        totalBlocked:
+          $ref: "#/components/schemas/Money"
+        totalPending:
+          $ref: "#/components/schemas/Money"
+        releasedThisPeriod:
+          $ref: "#/components/schemas/Money"
+        medianClearanceDaysByTier:
+          type: object
+          additionalProperties:
+            type: integer
+    DataEnvelopeAiSystem:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/AiSystem"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeIntendedUseStatement:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/IntendedUseStatement"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeDecisionType:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DecisionType"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeRiskTierAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/RiskTierAssessment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeLawfulBasisRegistration:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/LawfulBasisRegistration"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeSafeguardConfiguration:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/SafeguardConfiguration"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeFairnessAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/FairnessAssessment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeAlgorithmAudit:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/AlgorithmAudit"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeExplainabilityDetermination:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ExplainabilityDetermination"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeClearanceRequest:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ClearanceRequest"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeChallengeFinding:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ChallengeFinding"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeDeploymentClearance:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DeploymentClearance"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeRiskAcceptance:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/RiskAcceptance"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeOversightAssignment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/OversightAssignment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeContestationCase:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ContestationCase"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeVendorDueDiligence:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/VendorDueDiligence"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeDatasetProvenance:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/DatasetProvenance"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeLiabilityApportionment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/LiabilityApportionment"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeConformityDossier:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ConformityDossier"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeAiIncident:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/AiIncident"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    DataEnvelopeValueAtStakeReport:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/ValueAtStakeReport"
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeAiSystem:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/AiSystem"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeDecisionType:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DecisionType"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeFairnessAssessment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/FairnessAssessment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeClearanceRequest:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ClearanceRequest"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeRiskAcceptance:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/RiskAcceptance"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeOversightAssignment:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/OversightAssignment"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeContestationCase:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ContestationCase"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeThirdPartyModel:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ThirdPartyModel"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
+    ListEnvelopeConformityMapping:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConformityMapping"
+            nextCursor:
+              type: string
+        meta:
+          $ref: "#/components/schemas/ResponseMeta"
